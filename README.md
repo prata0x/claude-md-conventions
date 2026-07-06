@@ -33,17 +33,7 @@
 `@import`はローカルパスのみ解決しURLは解決しないため、ダウンストリーム側に
 物理的にファイルが存在する必要がある。
 
-取得方法はこのリポジトリの可視性に応じて選ぶ:
-
-**privateな場合** — `gh`の認証情報でGitHub API経由で取得:
-
-```sh
-mkdir -p .claude/vendor
-gh api repos/prata0x/claude-md-conventions/contents/dist/universal.md \
-  -H "Accept: application/vnd.github.raw" > .claude/vendor/universal.md
-```
-
-**publicな場合** — 認証不要の`curl`で取得可能:
+認証不要の`curl`で取得できる:
 
 ```sh
 mkdir -p .claude/vendor
