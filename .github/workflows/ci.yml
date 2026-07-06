@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Verify actions are SHA-pinned
+        run: |
+          bad=$(grep -rEn '^[[:space:]]*uses:[[:space:]]' .github/workflows | grep -vE '@[0-9a-f]{40}' || true)
+          if [ -n "$bad" ]; then
+            echo "::error::Action(s) not pinned to a 40-char commit SHA:"
+            echo "$bad"
+            exit 1
+          fi
+
+      - name: Rebuild bundles and check for drift
+        run: |
+          node ./scripts/build-bundles.mjs
+          if ! git diff --exit-code -- dist/; then
+            echo "::error::dist/ is out of date relative to claude-md/*.md." >&2
+            echo "::error::Run scripts/build-bundles.mjs and commit the result." >&2
+            exit 1
+          fi
